@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2022 FIXME
+// Copyright (c) 2022
 // Generated with linux-mdss-dsi-panel-driver-generator from vendor device tree:
-//   Copyright (c) 2013, The Linux Foundation. All rights reserved. (FIXME)
+// Copyright (c) 2022, The Linux Foundation. All rights reserved.
 
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
@@ -11,6 +11,7 @@
 
 #include <video/mipi_display.h>
 
+#include <drm/display/drm_dsc.h>
 #include <drm/display/drm_dsc_helper.h>
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_modes.h>
@@ -117,6 +118,9 @@ static int j20s_36_02_0a_dsc_on(struct j20s_36_02_0a_dsc *ctx)
 	ret = mipi_dsi_dcs_set_pixel_format(dsi, 0xef);
 	if (ret < 0) {
 		dev_err(dev, "Failed to set pixel format: %d\n", ret);
+		} else 
+	{
+		dev_err(dev, "set pixel format: %d\n", ret);
 		return ret;
 	}
 
@@ -207,7 +211,7 @@ static int j20s_36_02_0a_dsc_prepare(struct drm_panel *panel)
 	struct j20s_36_02_0a_dsc *ctx = to_j20s_36_02_0a_dsc(panel);
 	struct device *dev = &ctx->dsi->dev;
 
-	struct drm_dsc_picture_parameter_set pps;
+	//struct drm_dsc_picture_parameter_set pps;
 
 	int ret;
 
@@ -230,12 +234,12 @@ static int j20s_36_02_0a_dsc_prepare(struct drm_panel *panel)
 		return ret;
 	}
 
-	if (panel->dsc) {
+	//if (panel->drm->dsc) {
 		/* this panel uses DSC so send the pps */
-		drm_dsc_pps_payload_pack(&pps, panel->dsc);
+		/*drm_dsc_pps_payload_pack(&pps, panel->dsc);
 		print_hex_dump(KERN_DEBUG, "DSC params:", DUMP_PREFIX_NONE,
                                16, 1, &pps, sizeof(pps), false);
-	}
+	}*/
 
 	ctx->prepared = true;
 
@@ -306,6 +310,7 @@ static int j20s_36_02_0a_dsc_probe(struct mipi_dsi_device *dsi)
 	struct device *dev = &dsi->dev;
 	struct j20s_36_02_0a_dsc *ctx;
 	struct drm_dsc_config *dsc;
+	struct drm_dsc_picture_parameter_set pps;
 
 	int ret;
 
@@ -325,6 +330,13 @@ static int j20s_36_02_0a_dsc_probe(struct mipi_dsi_device *dsi)
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
 				     "Failed to get reset-gpios\n");
+				
+	if (dsi->dsc) {
+		/* this panel uses DSC so send the pps */
+		drm_dsc_pps_payload_pack(&pps, dsi->dsc);
+		print_hex_dump(KERN_DEBUG, "DSC params:", DUMP_PREFIX_NONE,
+                               16, 1, &pps, sizeof(pps), false);
+	}
 
 	ctx->dsi = dsi;
 	mipi_dsi_set_drvdata(dsi, ctx);
@@ -350,22 +362,22 @@ static int j20s_36_02_0a_dsc_probe(struct mipi_dsi_device *dsi)
 	if (!dsc)
 		return -ENOMEM;
 
-	dsc->dsc_version_major = 17;
+	dsc->dsc_version_major = 11;
 	dsc->dsc_version_minor = 0;
 
 	dsc->slice_height = 20;
 	dsc->slice_width = 540;
-	dsc->slice_count = 1; // TODO: fix this value
+	dsc->slice_count = 1; 
 	dsc->bits_per_component = 8;
 	dsc->bits_per_pixel = 8;
-	dsc->block_pred_enable = false;
+	dsc->block_pred_enable = true;
 
-	ctx->panel.dsc = dsc;
+	ctx->dsi->dsc = dsc;
 
 	return 0;
 }
 
-static int j20s_36_02_0a_dsc_remove(struct mipi_dsi_device *dsi)
+static void j20s_36_02_0a_dsc_remove(struct mipi_dsi_device *dsi)
 {
 	struct j20s_36_02_0a_dsc *ctx = mipi_dsi_get_drvdata(dsi);
 	int ret;
@@ -376,11 +388,11 @@ static int j20s_36_02_0a_dsc_remove(struct mipi_dsi_device *dsi)
 
 	drm_panel_remove(&ctx->panel);
 
-	return 0;
+	//return 0;
 }
 
 static const struct of_device_id j20s_36_02_0a_dsc_of_match[] = {
-	{ .compatible = "mdss,j20s-36-02-0a-dsc" }, // FIXME
+	{ .compatible = "mdss,j20s-36-02-0a-dsc" },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, j20s_36_02_0a_dsc_of_match);
@@ -395,6 +407,6 @@ static struct mipi_dsi_driver j20s_36_02_0a_dsc_driver = {
 };
 module_mipi_dsi_driver(j20s_36_02_0a_dsc_driver);
 
-MODULE_AUTHOR("linux-mdss-dsi-panel-driver-generator <fix@me>"); // FIXME
+MODULE_AUTHOR("linux-mdss-dsi-panel-driver-generator <degdagmohamed@gmail.com>");
 MODULE_DESCRIPTION("DRM driver for xiaomi 36 02 0a video mode dsc dsi panel");
 MODULE_LICENSE("GPL v2");
