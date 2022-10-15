@@ -117,9 +117,6 @@ static int j20s_36_02_0a_dsc_on(struct j20s_36_02_0a_dsc *ctx)
 	ret = mipi_dsi_dcs_set_pixel_format(dsi, 0xef);
 	if (ret < 0) {
 		dev_err(dev, "Failed to set pixel format: %d\n", ret);
-		} else 
-	{
-		dev_err(dev, "set pixel format: %d\n", ret);
 		return ret;
 	}
 
@@ -316,9 +313,9 @@ static int j20s_36_02_0a_dsc_probe(struct mipi_dsi_device *dsi)
 	if (!ctx)
 		return -ENOMEM;
 
-	ctx->supplies[0].supply = "vdd";
-	ctx->supplies[1].supply = "lab";
-	ctx->supplies[2].supply = "ibb";
+	ctx->supplies[0].supply = "vddio";
+	ctx->supplies[1].supply = "ldo";
+	ctx->supplies[2].supply = "ncp";
 	ret = devm_regulator_bulk_get(dev, ARRAY_SIZE(ctx->supplies),
 				      ctx->supplies);
 	if (ret < 0)
@@ -358,10 +355,10 @@ static int j20s_36_02_0a_dsc_probe(struct mipi_dsi_device *dsi)
 
 	dsc->slice_height = 20;
 	dsc->slice_width = 540;
-	dsc->slice_count = 2; 
+	dsc->slice_count = 1; // TODO: fix this value
 	dsc->bits_per_component = 8;
 	dsc->bits_per_pixel = 8;
-	dsc->block_pred_enable = true;
+	dsc->block_pred_enable = false;
 
 	ctx->panel.dsc = dsc;
 
